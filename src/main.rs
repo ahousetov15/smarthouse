@@ -51,12 +51,23 @@ struct Smarthouse {
 }
 
 trait SmarthouseInterface {
+    fn new() -> Self;
     fn temperature(&self);
     fn turn_switch(&mut self, turn: &bool);
     fn outlet_power(&self);
 }
 
 impl SmarthouseInterface for Smarthouse {
+    fn new() -> Self {
+        Self {
+            outlet: Outlet {
+                power: 3.6,
+                state: OutletState::IsOff,
+            },
+            thermometer: Thermometer { temperature: 23 },
+        }
+    }
+
     fn temperature(&self) {
         self.thermometer.get_temparature();
     }
@@ -71,12 +82,9 @@ impl SmarthouseInterface for Smarthouse {
 }
 
 fn main() {
-    let mut outlet = Outlet {
-        power: 3.6,
-        state: OutletState::IsOff,
-    };
-    let temp = Thermometer { temperature: 23 };
-    outlet.get_power();
-    outlet.turn_switch(&true);
-    temp.get_temparature();
+    let mut smarthouse = Smarthouse::new();
+    smarthouse.outlet_power();
+    smarthouse.turn_switch(&true);
+    smarthouse.turn_switch(&false);
+    smarthouse.temperature();
 }
