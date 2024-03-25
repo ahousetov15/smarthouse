@@ -45,6 +45,31 @@ impl ThermometerInterface for Thermometer {
     }
 }
 
+struct Smarthouse {
+    outlet: Outlet,
+    thermometer: Thermometer,
+}
+
+trait SmarthouseInterface {
+    fn temperature(&self);
+    fn turn_switch(&mut self, turn: &bool);
+    fn outlet_power(&self);
+}
+
+impl SmarthouseInterface for Smarthouse {
+    fn temperature(&self) {
+        self.thermometer.get_temparature();
+    }
+
+    fn turn_switch(&mut self, turn: &bool) {
+        self.outlet.turn_switch(turn);
+    }
+
+    fn outlet_power(&self) {
+        self.outlet.get_power();
+    }
+}
+
 fn main() {
     let mut outlet = Outlet {
         power: 3.6,
