@@ -2,12 +2,12 @@
 
 ///Состояния нашей розетки
 enum OutletState {
-    IsOn, //Включено
+    IsOn,  //Включено
     IsOff, //Выключено
 }
 
 struct Outlet {
-    power: f32, //Величина в ваттах
+    power: f32,         //Величина в ваттах
     state: OutletState, //Состояние розетки (Вкл./Выкл.)
 }
 
@@ -24,11 +24,11 @@ trait ThermometerInterface {
     fn get_temparature(&self); //Получить текущую температуру
 }
 
-
 ///Интерфейс для розетки
 impl OutletInterface for Outlet {
-    fn turn_switch(&mut self, state: &bool) {//Повернуть выключатель (во Вкл. или Выкл.)
-        if *state == true {
+    fn turn_switch(&mut self, state: &bool) {
+        //Повернуть выключатель (во Вкл. или Выкл.)
+        if *state {
             self.state = OutletState::IsOn;
             println!("Outlet is switched on");
         } else {
@@ -37,16 +37,17 @@ impl OutletInterface for Outlet {
         }
     }
 
-    fn get_power(&self) { //Получить потребляемую мощность
+    fn get_power(&self) {
+        //Получить потребляемую мощность
         let value = self.power;
         println!("Outler power is {value} vatt");
     }
 }
 
-
 ///Интерфейс для термометра
 impl ThermometerInterface for Thermometer {
-    fn get_temparature(&self) { //Получить текущую температуру
+    fn get_temparature(&self) {
+        //Получить текущую температуру
         let current_temperature = self.temperature;
         println!("Current temperature: {current_temperature:?}");
     }
@@ -54,7 +55,7 @@ impl ThermometerInterface for Thermometer {
 
 ///Наш умный дом
 struct Smarthouse {
-    outlet: Outlet, //Розетка
+    outlet: Outlet,           //Розетка
     thermometer: Thermometer, //Термометр
 }
 
@@ -66,10 +67,12 @@ trait SmarthouseInterface {
     fn outlet_power(&self); //Получить потребляемую мощность
 }
 
-
-///Имплементация интерфейса для умного дома
+///Интерфейс для умного дома
+///
 impl SmarthouseInterface for Smarthouse {
-    fn new() -> Self { //Конструктор для инициализации со значениями по умолчанию
+    ///Конструктор
+    fn new() -> Self {
+        //Конструктор для инициализации со значениями по умолчанию
         Self {
             outlet: Outlet {
                 power: 3.6,
@@ -79,15 +82,18 @@ impl SmarthouseInterface for Smarthouse {
         }
     }
 
-    fn temperature(&self) { //Получить текущую температуру
+    ///Получить текущую температуру
+    fn temperature(&self) {
         self.thermometer.get_temparature();
     }
 
-    fn turn_switch(&mut self, turn: &bool) { //Повернуть выключатель
+    ///Повернуть выключатель
+    fn turn_switch(&mut self, turn: &bool) {
         self.outlet.turn_switch(turn);
     }
 
-    fn outlet_power(&self) { //Получить потребляемую мощность
+    ///Получить потребляемую мощность
+    fn outlet_power(&self) {
         self.outlet.get_power();
     }
 }
