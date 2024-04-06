@@ -1,62 +1,33 @@
 // src/main.rs
 
 ///Состояния нашей розетки
-enum OutletState {
+enum SocketState {
     IsOn,  //Включено
     IsOff, //Выключено
 }
 
-struct Outlet {
+struct Socket {
     power: f32,         //Величина в ваттах
-    state: OutletState, //Состояние розетки (Вкл./Выкл.)
+    state: SocketState, //Состояние розетки (Вкл./Выкл.)
 }
 
 struct Thermometer {
     temperature: i32, // Температура в градусах цельсия
 }
 
-trait OutletInterface {
+///Наш умный дом
+struct Smarthouse {
+    outlet: Socket,           //Розетка
+    thermometer: Thermometer, //Термометр
+}
+
+trait SocketInterface {
     fn turn_switch(&mut self, state: &bool); //Повернуть выключатель (во Вкл. или Выкл.)
     fn get_power(&self); // Получить потребляемую мощность
 }
 
 trait ThermometerInterface {
     fn get_temparature(&self); //Получить текущую температуру
-}
-
-///Интерфейс для розетки
-impl OutletInterface for Outlet {
-    fn turn_switch(&mut self, state: &bool) {
-        //Повернуть выключатель (во Вкл. или Выкл.)
-        if *state {
-            self.state = OutletState::IsOn;
-            println!("Outlet is switched on");
-        } else {
-            self.state = OutletState::IsOff;
-            println!("Outlet is switched off");
-        }
-    }
-
-    fn get_power(&self) {
-        //Получить потребляемую мощность
-        let value = self.power;
-        println!("Outler power is {value} vatt");
-    }
-}
-
-///Интерфейс для термометра
-impl ThermometerInterface for Thermometer {
-    fn get_temparature(&self) {
-        //Получить текущую температуру
-        let current_temperature = self.temperature;
-        println!("Current temperature: {current_temperature:?}");
-    }
-}
-
-///Наш умный дом
-struct Smarthouse {
-    outlet: Outlet,           //Розетка
-    thermometer: Thermometer, //Термометр
 }
 
 ///Интерфейс для умного дома
@@ -67,32 +38,59 @@ trait SmarthouseInterface {
     fn outlet_power(&self); //Получить потребляемую мощность
 }
 
-///Интерфейс для умного дома
-///
+///Интерфейс для розетки
+impl SocketInterface for Socket {
+    /// Повернуть выключатель (во Вкл. или Выкл.)
+    fn turn_switch(&mut self, state: &bool) {
+        if *state {
+            self.state = SocketState::IsOn;
+            println!("Socket is switched on");
+        } else {
+            self.state = SocketState::IsOff;
+            println!("Socket is switched off");
+        }
+    }
+
+    /// Получить потребляемую мощность
+    fn get_power(&self) {
+        let value = self.power;
+        println!("Socket power is {value} vatt");
+    }
+}
+
+///Интерфейс для термометра
+impl ThermometerInterface for Thermometer {
+    ///Получить текущую температуру
+    fn get_temparature(&self) {
+        let current_temperature = self.temperature;
+        println!("Current temperature: {current_temperature:?}");
+    }
+}
+
+///! Имплементация интерфейса для умного дома
 impl SmarthouseInterface for Smarthouse {
-    ///Конструктор
+    /// Конструктор для инициализации со значениями по умолчанию
     fn new() -> Self {
-        //Конструктор для инициализации со значениями по умолчанию
         Self {
-            outlet: Outlet {
+            outlet: Socket {
                 power: 3.6,
-                state: OutletState::IsOff,
+                state: SocketState::IsOff,
             },
             thermometer: Thermometer { temperature: 23 },
         }
     }
 
-    ///Получить текущую температуру
+    /// Получить текущую температуру
     fn temperature(&self) {
         self.thermometer.get_temparature();
     }
 
-    ///Повернуть выключатель
+    /// Повернуть выключатель
     fn turn_switch(&mut self, turn: &bool) {
         self.outlet.turn_switch(turn);
     }
 
-    ///Получить потребляемую мощность
+    /// Получить потребляемую мощность
     fn outlet_power(&self) {
         self.outlet.get_power();
     }
