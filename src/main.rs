@@ -1,17 +1,20 @@
 // src/main.rs
 
 ///Состояния нашей розетки
+#[derive(Clone)]
 enum SocketState {
     IsOn,  //Включено
     IsOff, //Выключено
 }
 
+#[derive(Clone)]
 struct Socket {
     name: String,       //Имя девайса
     power: f32,         //Величина в ваттах
     state: SocketState, //Состояние розетки (Вкл./Выкл.)
 }
 
+#[derive(Clone)]
 struct Thermometer {
     name: String,     // Имя девайса
     temperature: i32, // Температура в градусах цельсия
@@ -19,50 +22,44 @@ struct Thermometer {
 
 /// Для хранения разных типов устройств в одном контейнере,
 /// создаем некий тип-перечисление типов.
+#[derive(Clone)]
 enum Device {
     Socket(Socket),
     Thermometer(Thermometer),
 }
 
-///Наш умный дом
-struct Smarthouse {
-    name: String,             // Имя дома
-    socket: Socket,           //Розетка
-    thermometer: Thermometer, //Термометр
-}
-
 /// Команата
+#[derive(Clone)]
 struct Room {
     name: String,
     decives: Vec<Device>,
 }
 
-// trait SocketInterface {
-//    fn turn_switch(&mut self, state: &bool); //Повернуть выключатель (во Вкл. или Выкл.)
-//    fn get_power(&self); // Получить потребляемую мощность
-// }
-
-trait ThermometerInterface {
-    fn get_temparature(&self); //Получить текущую температуру
+///Наш умный дом
+struct Smarthouse {
+    name: String,     // Имя дома
+    rooms: Vec<Room>, // Список комнат
 }
 
-///Интерфейс для умного дома
-// trait SmarthouseInterface {
-//    fn new() -> Self; //Конструктор для инициализации со значениями по умолчанию
-//    fn temperature(&self); //Получить текущую температуру
-//    fn turn_switch(&mut self, turn: &bool); //Повернуть выключатель
-//    fn socket_power(&self); //Получить потребляемую мощность
+// trait ThermometerInterface {
+//     fn get_temparature(&self); //Получить текущую температуру
 // }
+
+///Интерфейс для умного дома
 trait SmarthouseInterface<T> {
+    type GetResult;
+
     fn new(params: T) -> Self;
     fn name(&self) -> &str;
-    fn get(&self); //Получить текущую температуру
-                   //fn interact(&mut self, turn: &bool); //Повернуть выключатель
+    fn get(&self) -> Self::GetResult; //Получить список оборудования/помещений в комнате/доме
+    fn report(&self) -> String; // Получить отчет об оборудовании в помещении/список комнат и оборудования в них
     fn interact(&mut self); //Повернуть выключатель
 }
 
 ///Интерфейс для розетки
 impl SmarthouseInterface<Socket> for Socket {
+    type GetResult = Vec<f32>;
+
     fn new(params: Socket) -> Self {
         Self {
             name: params.name,
@@ -72,60 +69,74 @@ impl SmarthouseInterface<Socket> for Socket {
     }
 
     fn name(&self) -> &str {
-        println!("{:?} socket", self.name.as_str());
+        println!("{:?} розетка", self.name.as_str());
         self.name.as_str()
     }
 
     /// Повернуть выключатель (во Вкл. или Выкл.)
     fn interact(&mut self) {
         self.state = match self.state {
-            SocketState::IsOn => SocketState::IsOff,
-            SocketState::IsOff => SocketState::IsOn,
+            SocketState::IsOn => {
+                println!("Розетка выключена.");
+                SocketState::IsOff
+            }
+            SocketState::IsOff => {
+                println!("Розетка включена.");
+                SocketState::IsOn
+            }
         }
-        // if *state {
-        //     self.state = SocketState::IsOn;
-        //     println!("Socket is switched on");
-        // } else {
-        //     self.state = SocketState::IsOff;
-        //     println!("Socket is switched off");
-        // }
     }
 
     /// Получить потребляемую мощность
-    fn get(&self) {
-        let value = self.power;
-        println!("Socket power is {value} vatt");
+    fn get(&self) -> Self::GetResult {
+        let power_vec = vec![self.power];
+        power_vec
+    }
+
+    /// Получить отчет о потреблемой мощности
+    fn report(&self) -> String {
+        format!(" - Розетка: '{}' на {} ватт\n", self.name, self.power)
     }
 }
 
 ///Интерфейс для термометра
 impl SmarthouseInterface<Thermometer> for Thermometer {
+    type GetResult = Vec<i32>;
+
     fn new(param: Thermometer) -> Self {
         Self {
             name: param.name,
             temperature: param.temperature,
         }
-        //Thermometer { temperature: 23 }
     }
 
     ///Получить текущую температуру
-    fn get(&self) {
-        let current_temperature = self.temperature;
-        println!("Current temperature: {current_temperature:?}");
+    fn get(&self) -> Self::GetResult {
+        let temperature_vec = vec![self.temperature];
+        temperature_vec
     }
 
     fn name(&self) -> &str {
-        println!("{:?} thermometer", self.name.as_str());
+        println!("{:?} термометр", self.name.as_str());
         self.name.as_str()
     }
 
     fn interact(&mut self) {
-        //println!("Turned {}", if *turn { "on" } else { "off" });
-        println!("SmarthouseInterface<Thermometer>::interact was called");
+        println!("SmarthouseInterface<Thermometer>::interact был вызыван");
+    }
+
+    /// Получить отчет о термометре и температура
+    fn report(&self) -> String {
+        format!(
+            " - Термометр: '{}' с показанием +{} градусов по цельсию\n",
+            self.name, self.temperature
+        )
     }
 }
 
 impl SmarthouseInterface<Room> for Room {
+    type GetResult = Vec<Device>;
+
     fn new(param: Room) -> Self {
         Self {
             name: param.name,
@@ -134,35 +145,77 @@ impl SmarthouseInterface<Room> for Room {
     }
 
     fn interact(&mut self) {
-        //println!("Turned {}", if *turn { "on" } else { "off" });
-        println!("SmarthouseInterface<Room>::interact was called");
+        println!("SmarthouseInterface<Room>::interact был вызван");
     }
 
     fn name(&self) -> &str {
-        println!("{:?} room", self.name.as_str());
-
+        println!("{:?} комната", self.name.as_str());
         self.name.as_str()
     }
 
-    fn get(&self) {
-        let mut output = format!("**Room:{}**\n", self.name);
+    fn get(&self) -> Self::GetResult {
+        self.decives.clone()
+    }
+
+    fn report(&self) -> String {
+        let mut output = format!("**Комната:{}**\n", self.name);
         if !self.decives.is_empty() {
-            output += "**Devices**\n";
+            output += "**Устройсва:**\n";
             for d in &self.decives {
                 match d {
                     Device::Socket(socket) => {
-                        output += format!(" - Розетка: {}\n", socket.name).as_str();
+                        output += &socket.report();
+                        //output += format!(" - Розетка: {}\n", socket.name).as_str();
                     }
                     Device::Thermometer(thermometer) => {
-                        output += format!(" - Термометр: {}\n", thermometer.name).as_str();
+                        output += &thermometer.report();
+                        //output += format!(" - Термометр: {}\n", thermometer.name).as_str();
                     }
                 }
             }
         } else {
-            output += "**No devices in the room.**"
+            output += "**В комнате не обнаружено устройств.**\n\n"
         }
+        output += "****\n\n";
+        output
+    }
+}
 
-        println!("{}", output)
+impl SmarthouseInterface<Smarthouse> for Smarthouse {
+    type GetResult = Vec<Room>;
+
+    fn new(param: Smarthouse) -> Self {
+        Self {
+            name: param.name,
+            rooms: param.rooms,
+        }
+    }
+
+    fn name(&self) -> &str {
+        println!("{:?} house", self.name.as_str());
+        self.name.as_str()
+    }
+
+    fn interact(&mut self) {
+        println!("SmarthouseInterface<Smarthouse>::interact был вызван");
+    }
+
+    fn report(&self) -> String {
+        let mut output = format!("**Дом:{}**\n", self.name);
+        if !self.rooms.is_empty() {
+            output += "**Комнаты:**\n";
+            for room in &self.rooms {
+                output += &room.report();
+            }
+        } else {
+            output += "**В доме не обнаружено комнат.**\n\n"
+        }
+        output += "****\n\n";
+        output
+    }
+
+    fn get(&self) -> Self::GetResult {
+        self.rooms.clone()
     }
 }
 
