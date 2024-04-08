@@ -7,13 +7,14 @@ enum SocketState {
 }
 
 struct Socket {
+    name: String,       //Имя девайса
     power: f32,         //Величина в ваттах
     state: SocketState, //Состояние розетки (Вкл./Выкл.)
 }
 
 struct Thermometer {
+    name: String,     // Имя девайса
     temperature: i32, // Температура в градусах цельсия
-
 }
 
 /// Для хранения разных типов устройств в одном контейнере,
@@ -52,30 +53,42 @@ trait ThermometerInterface {
 //    fn turn_switch(&mut self, turn: &bool); //Повернуть выключатель
 //    fn socket_power(&self); //Получить потребляемую мощность
 // }
-trait SmarthouseInterface {
-    fn new() where Self: Sized; //Конструктор для инициализации со значениями по умолчанию
+trait SmarthouseInterface<T> {
+    fn new(params: T) -> Self;
+    fn get_name(&self) -> &str;
     fn get(&self); //Получить текущую температуру
-    fn interact(&mut self, turn: &bool); //Повернуть выключатель
+                   //fn interact(&mut self, turn: &bool); //Повернуть выключатель
+    fn interact(&mut self); //Повернуть выключатель
 }
 
 ///Интерфейс для розетки
-impl SmarthouseInterface for Socket {
-    fn new() {
-        Socket{
-            power: 0.0,
-            state: SocketState::IsOff,
+impl SmarthouseInterface<Socket> for Socket {
+    fn new(params: Socket) -> Self {
+        Self {
+            name: params.name,
+            power: params.power,
+            state: params.state,
         }
     }
 
+    fn get_name(&self) -> &str {
+        println!("{:?} socket", self.name.as_str());
+        self.name.as_str()
+    }
+
     /// Повернуть выключатель (во Вкл. или Выкл.)
-    fn interact(&mut self, state: &bool) {
-        if *state {
-            self.state = SocketState::IsOn;
-            println!("Socket is switched on");
-        } else {
-            self.state = SocketState::IsOff;
-            println!("Socket is switched off");
+    fn interact(&mut self) {
+        self.state = match self.state {
+            SocketState::IsOn => SocketState::IsOff,
+            SocketState::IsOff => SocketState::IsOn,
         }
+        // if *state {
+        //     self.state = SocketState::IsOn;
+        //     println!("Socket is switched on");
+        // } else {
+        //     self.state = SocketState::IsOff;
+        //     println!("Socket is switched off");
+        // }
     }
 
     /// Получить потребляемую мощность
@@ -86,11 +99,13 @@ impl SmarthouseInterface for Socket {
 }
 
 ///Интерфейс для термометра
-impl SmarthouseInterface for Thermometer {
-    fn new() -> () {
-        Thermometer{
-            temperature: 23,
+impl SmarthouseInterface<Thermometer> for Thermometer {
+    fn new(param: Thermometer) -> Self {
+        Self {
+            name: param.name,
+            temperature: param.temperature,
         }
+        //Thermometer { temperature: 23 }
     }
 
     ///Получить текущую температуру
@@ -99,8 +114,55 @@ impl SmarthouseInterface for Thermometer {
         println!("Current temperature: {current_temperature:?}");
     }
 
-    fn interact(&mut self, turn: &bool) {
-        println!("Turned {}", if *turn { "on" } else { "off" });
+    fn get_name(&self) -> &str {
+        println!("{:?} thermometer", self.name.as_str());
+        self.name.as_str()
+    }
+
+    fn interact(&mut self) {
+        //println!("Turned {}", if *turn { "on" } else { "off" });
+        println!("SmarthouseInterface<Thermometer>::interact was called");
+    }
+}
+
+impl SmarthouseInterface<Room> for Room {
+    fn new(param: Room) -> Self {
+        Self {
+            name: param.name,
+            decives: param.decives,
+        }
+    }
+
+    fn interact(&mut self) {
+        //println!("Turned {}", if *turn { "on" } else { "off" });
+        println!("SmarthouseInterface<Room>::interact was called");
+    }
+
+    fn get_name(&self) -> &str {
+        println!("{:?} room", self.name);
+
+        self.name.as_str()
+    }
+
+    fn get(&self) {
+        let mut output = format!("**Room:{}**\n", self.name);
+        if !self.decives.is_empty() {
+            output += "**Devices**\n";
+            for d in &self.decives {
+                match d {
+                    Device::Socket(socket) => {
+                        output += format!(" - Розетка: {}\n", socket.name).as_str();
+                    }
+                    Device::Thermometer(thermometer) => {
+                        output += format!(" - Термометр: {}\n", thermometer.name).as_str();
+                    }
+                }
+            }
+        } else {
+            output += "**No devices in the room.**"
+        }
+
+        println!("{}", output)
     }
 }
 
