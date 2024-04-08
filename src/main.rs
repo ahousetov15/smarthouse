@@ -55,7 +55,7 @@ trait ThermometerInterface {
 // }
 trait SmarthouseInterface<T> {
     fn new(params: T) -> Self;
-    fn get_name(&self) -> &str;
+    fn name(&self) -> &str;
     fn get(&self); //Получить текущую температуру
                    //fn interact(&mut self, turn: &bool); //Повернуть выключатель
     fn interact(&mut self); //Повернуть выключатель
@@ -71,7 +71,7 @@ impl SmarthouseInterface<Socket> for Socket {
         }
     }
 
-    fn get_name(&self) -> &str {
+    fn name(&self) -> &str {
         println!("{:?} socket", self.name.as_str());
         self.name.as_str()
     }
@@ -114,7 +114,7 @@ impl SmarthouseInterface<Thermometer> for Thermometer {
         println!("Current temperature: {current_temperature:?}");
     }
 
-    fn get_name(&self) -> &str {
+    fn name(&self) -> &str {
         println!("{:?} thermometer", self.name.as_str());
         self.name.as_str()
     }
@@ -138,8 +138,8 @@ impl SmarthouseInterface<Room> for Room {
         println!("SmarthouseInterface<Room>::interact was called");
     }
 
-    fn get_name(&self) -> &str {
-        println!("{:?} room", self.name);
+    fn name(&self) -> &str {
+        println!("{:?} room", self.name.as_str());
 
         self.name.as_str()
     }
