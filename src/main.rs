@@ -1,7 +1,6 @@
 // src/main.rs
 
 use std::collections::{HashMap, HashSet};
-use std::rc::Rc;
 
 ///Состояния нашей розетки
 #[derive(Clone)]
@@ -127,14 +126,32 @@ struct Smarthouse {
     rooms: HashMap<String, Room>,
 }
 
-// /// Хранилище устройств
-// struct DeviceStorage {
-//     device_map: HashMap<String, Vec<Box<dyn DeviceInterface<T>>>>,
-// }
+/// Хранилище устройств
+struct DeviceStorage<'a> {
+    device_map: HashMap<String, Vec<&'a dyn DeviceInterface>>,
+}
 
-// impl DeviceStorage {
-//     pub gn get_device_report(&self, )
-// }
+impl DeviceStorage<'_> {
+    fn get_device_report(&self, room: &str, name: &str) -> Option<String> {
+        match self.device_map.get(*room) {
+            Some(rooms_vec) => {
+                for room in rooms_vec.iter() {
+                    match room.as_any().downcast_ref::<dyn DeviceInterface>() {
+                        Some(dev_interface) => dev_interface.report(),
+                        None => {
+                            println!("Не получилось привести устройство из комнаты {} к его интерфейсу в DeviceStorage::get_device_report");
+                            None
+                        }
+                    }
+                }
+            }
+            _ => {
+                println!("Такой комнаты в доме нет.");
+                None
+            }
+        }
+    }
+}
 
 trait SmarthouseInterface {
     //fn get_device_info(&self, room: &str, name: &str) -> Option<String>; // Получаем информацию о том, ГДЕ ИМЕННО В ДОМЕ находится девайс
