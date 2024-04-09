@@ -1,5 +1,8 @@
 // src/main.rs
 
+use std::collections::{HashMap, HashSet};
+use std::rc::Rc;
+
 ///Состояния нашей розетки
 #[derive(Clone)]
 enum SocketState {
@@ -14,10 +17,29 @@ struct Socket {
     state: SocketState, //Состояние розетки (Вкл./Выкл.)
 }
 
+impl Socket {
+    fn new(params: Socket) -> Self {
+        Self {
+            name: params.name,
+            power: params.power,
+            state: params.state,
+        }
+    }
+}
+
 #[derive(Clone)]
 struct Thermometer {
     name: String,     // Имя девайса
     temperature: i32, // Температура в градусах цельсия
+}
+
+impl Thermometer {
+    fn new(param: Thermometer) -> Self {
+        Self {
+            name: param.name,
+            temperature: param.temperature,
+        }
+    }
 }
 
 // /// Для хранения разных типов устройств в одном контейнере,
@@ -29,34 +51,20 @@ struct Thermometer {
 // }
 
 /// Команата
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct Room {
     name: String,
-    // decives: Vec<Device>,
+    decives: HashSet<String>,
 }
 
-// ///Наш умный дом
-// struct Smarthouse {
-//     name: String,     // Имя дома
-//     rooms: Vec<Room>, // Список комнат
-// }
-
-// trait ThermometerInterface {
-//     fn get_temparature(&self); //Получить текущую температуру
-// }
-
-trait DeviceInterface<T> {
-    type GetResult;
-
+trait DeviceInterface {
     fn name(&self) -> &str;
-    fn get(&self) -> Self::GetResult; //Получить список оборудования/помещений в комнате/доме
+    fn get(&self) -> String; //Получить список оборудования/помещений в комнате/доме
     fn interact(&mut self); //Повернуть выключатель
     fn report(&self) -> String;
 }
 
-impl DeviceInterface<Socket> for Socket {
-    type GetResult = f32;
-
+impl DeviceInterface for Socket {
     fn name(&self) -> &str {
         println!("{:?} розетка", self.name.as_str());
         self.name.as_str()
@@ -77,8 +85,9 @@ impl DeviceInterface<Socket> for Socket {
     }
 
     /// Получить потребляемую мощность
-    fn get(&self) -> Self::GetResult {
-        self.power.clone()
+    fn get(&self) -> String {
+        let power_str = self.power.to_string();
+        power_str
     }
 
     /// Получить отчет о потреблемой мощности
@@ -87,12 +96,11 @@ impl DeviceInterface<Socket> for Socket {
     }
 }
 
-impl DeviceInterface<Thermometer> for Thermometer {
-    type GetResult = i32;
-
+impl DeviceInterface for Thermometer {
     ///Получить текущую температуру
-    fn get(&self) -> Self::GetResult {
-        self.temperature.clone()
+    fn get(&self) -> String {
+        let temp_str = self.temperature.to_string();
+        temp_str
     }
 
     fn name(&self) -> &str {
@@ -110,6 +118,45 @@ impl DeviceInterface<Thermometer> for Thermometer {
             " - Термометр: '{}' с показанием +{} градусов по цельсию\n",
             self.name, self.temperature
         )
+    }
+}
+
+/// Наш умный дом
+struct Smarthouse {
+    name: String, // Имя дома
+    rooms: HashMap<String, Room>,
+}
+
+// /// Хранилище устройств
+// struct DeviceStorage {
+//     device_map: HashMap<String, Vec<Box<dyn DeviceInterface<T>>>>,
+// }
+
+// impl DeviceStorage {
+//     pub gn get_device_report(&self, )
+// }
+
+trait SmarthouseInterface {
+    //fn get_device_info(&self, room: &str, name: &str) -> Option<String>; // Получаем информацию о том, ГДЕ ИМЕННО В ДОМЕ находится девайс
+    fn get_device_info(&self, room: &str) -> Option<String>; // Получаем информацию о том, ГДЕ ИМЕННО В ДОМЕ находится девайс
+}
+
+impl SmarthouseInterface for Smarthouse {
+    //fn get_device_info(&self, room: &str, name: &str) -> Option<String> {
+    fn get_device_info(&self, room: &str) -> Option<String> {
+        match self.rooms.get(room) {
+            Some(ref room_struct) => {
+                println!(
+                    "В данной комнате вот такой набор оборудования: {:#?}",
+                    room_struct
+                );
+                Some(format!("{:#?}", room_struct))
+            }
+            _ => {
+                println!("Такой комнаты в доме нет.");
+                None
+            }
+        }
     }
 }
 
@@ -291,6 +338,40 @@ impl DeviceInterface<Thermometer> for Thermometer {
 
 fn main() {
     // Создаем набор устройств для спальни
+
+    // let mut socket1 = Socket {
+    //     name: "Розетка в спальне".to_string(),
+    //     power: 220.0,
+    //     state: SocketState::IsOff,
+    // };
+    // let mut socket2 = Socket {
+    //     name: "Розетка у ванны".to_string(),
+    //     power: 210.0,
+    //     state: SocketState::IsOn,
+    // };
+    // let mut thermometer1 = Thermometer {
+    //     name: "Термометр в комнате".to_string(),
+    //     temperature: 22,
+    // };
+    let mut bedroom_device: Vec<&dyn DeviceInterface> = vec![
+        &Socket::new(Socket {
+            name: "Розетка в спальне".to_string(),
+            power: 220.0,
+            state: SocketState::IsOff,
+        }),
+        &Socket::new(Socket {
+            name: "Розетка у ванны".to_string(),
+            power: 210.0,
+            state: SocketState::IsOn,
+        }),
+        &Thermometer::new(Thermometer {
+            name: "Термометр в комнате".to_string(),
+            temperature: 22,
+        }),
+    ];
+    // bedroom_device.push(Rc::new(socket1 as Rc<dyn DeviceInterface<Socket>>));
+    // bedroom_device.push(Rc::new(thermometer1));
+
     // let mut room_1_sockets: Vec = vec![
     //     Socket {
     //         name: "Розетка_у_ванной".to_string(),
@@ -304,11 +385,13 @@ fn main() {
     //     },
     // ];
     // let bedroom_device: Vec<dyn SmarthouseInterface> = Vec::new();
-    let bedroom_devices: Vec<dyn SmarthouseInterface<T>> = vec![Socket::new(Socket {
-        name: "Розетка_у_ванной".to_string(),
-        power: 220.1,
-        state: SocketState::IsOn,
-    })];
+
+    // let bedroom_devices: Vec<dyn SmarthouseInterface<T>> = vec![Socket::new(Socket {
+    //     name: "Розетка_у_ванной".to_string(),
+    //     power: 220.1,
+    //     state: SocketState::IsOn,
+    // })];
+
     // bedroom_sockets.push(Socket::new(Socket {
     //     name: "Розетка_у_ванной".to_string(),
     //     power: 220.1,
