@@ -127,21 +127,21 @@ struct Smarthouse {
 }
 
 /// Хранилище устройств
-struct DeviceStorage<'a> {
-    device_map: HashMap<String, Vec<&'a dyn DeviceInterface>>,
+struct DeviceStorage {
+    room_map: HashMap<String, Vec<Box<dyn DeviceInterface>>>,
 }
 
-impl DeviceStorage<'_> {
+impl DeviceStorage {
     fn get_device_report(&self, room: &str, name: &str) -> Option<String> {
-        match self.device_map.get(*room) {
-            Some(rooms_vec) => {
-                for room in rooms_vec.iter() {
-                    match room.as_any().downcast_ref::<dyn DeviceInterface>() {
-                        Some(dev_interface) => dev_interface.report(),
-                        None => {
-                            println!("Не получилось привести устройство из комнаты {} к его интерфейсу в DeviceStorage::get_device_report");
-                            None
-                        }
+        match self.room_map.get(room) {
+            Some(device_vec) => {
+                println!("Try to find: {}", name);
+                let need_device = device_vec.iter().find(|&x| *x.name() == *name);
+                match need_device {
+                    Some(device) => Some(device.report()),
+                    _ => {
+                        println!("По имени {} ничего не найдено", name);
+                        None
                     }
                 }
             }
