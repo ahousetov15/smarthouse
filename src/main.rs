@@ -66,7 +66,7 @@ trait DeviceInterface {
 
 impl DeviceInterface for Socket {
     fn name(&self) -> &str {
-        println!("{:?} розетка", self.name.as_str());
+        //println!("{:?} розетка", self.name.as_str());
         self.name.as_str()
     }
 
@@ -104,7 +104,7 @@ impl DeviceInterface for Thermometer {
     }
 
     fn name(&self) -> &str {
-        println!("{:?} термометр", self.name.as_str());
+        //println!("{:?} термометр", self.name.as_str());
         self.name.as_str()
     }
 
@@ -191,6 +191,7 @@ trait SmarthouseInterface {
 
     fn get_roooms_list(&self) -> String; // Получаем список комнат прям строкой
     fn get_rooms_devices_list(&self, room_name: &str) -> String; // Получаем список устройств прямо строкой
+    fn full_report(&self, storage: &DeviceStorage) -> String;
 }
 
 impl SmarthouseInterface for Smarthouse {
@@ -200,10 +201,8 @@ impl SmarthouseInterface for Smarthouse {
         device_name: &str,
         storage: &DeviceStorage,
     ) -> Option<String> {
-        println!("Данные по дому: {:#?}", self.name.to_string());
         match self.rooms.get(room_name) {
             Some(room_struct) => {
-                println!("Обнаружена комната: {:#?}", room_struct);
                 if room_struct.devices.contains(device_name) {
                     storage.get_device_report(room_name, device_name)
                 } else {
@@ -224,31 +223,50 @@ impl SmarthouseInterface for Smarthouse {
             room_list.push(room_name.0.as_ref());
         }
         format!(
-            "В доме '{}' присутствуют следующие комнаты:\n -{}\n",
+            "В доме '{}' присутствуют следующие комнаты:\n - {}\n",
             self.name,
-            room_list.join("\n -")
+            room_list.join("\n - ")
         )
     }
 
     fn get_rooms_devices_list(&self, room_name: &str) -> String {
         match self.rooms.get(room_name) {
             Some(room_struct) => {
-                // let room_devices_list = room_struct.devices.iter().collect::<Vec<_>>();
                 let mut room_devices_list = Vec::<&str>::new();
                 for device_name in &room_struct.devices {
                     room_devices_list.push(device_name);
                 }
                 format!(
-                    "В комнате '{}' дома '{}' присутствуют следующие устройства:\n -{}\n",
+                    "В комнате '{}' дома '{}' присутствуют следующие устройства:\n - {}\n",
                     room_name,
                     self.name,
-                    room_devices_list.join("\n -")
+                    room_devices_list.join("\n - ")
                 )
             }
             _ => {
                 format!("Комнаты с именем '{}' не найдено.", room_name)
             }
         }
+    }
+
+    fn full_report(&self, storage: &DeviceStorage) -> String {
+        let mut full_report = format!("\n*** Полный отчет о состоянии дома '{}' ***\n", self.name);
+        full_report += &self.get_roooms_list();
+        for room in &self.rooms {
+            full_report += &format!("\nУстройства в комнате '{}':\n", room.0);
+            full_report += &self.get_rooms_devices_list(room.0.as_ref());
+            full_report += &format!("\nДанные по устройсвам в '{}':\n", room.0);
+            for device_name in &room.1.devices {
+                match self.get_device_info(&room.0, &device_name, storage) {
+                    Some(device_report) => {
+                        full_report += &device_report;
+                    }
+                    _ => {}
+                }
+            }
+        }
+        full_report += &format!("\n*** Отчет о доме окончен ***\n");
+        full_report
     }
 }
 
@@ -292,17 +310,18 @@ fn main() {
         .room_map
         .insert("Kitchen".to_string(), kitche_device);
     let smarthouse = Smarthouse::new("Домашная работа 3", &storage);
-    let report = smarthouse.get_device_info("Bedroom", "Розетка у ванны в спальне", &storage);
-    println!("Отчет: {:#?}", report);
-    let report = smarthouse.get_device_info("Bedroom", "Розетка в спальне", &storage);
-    println!("Отчет: {:#?}", report);
-    let report = smarthouse.get_device_info("Bedroom", "Термометр в спальне", &storage);
-    println!("Отчет: {:#?}", report);
-    let report = smarthouse.get_device_info("Kitchen", "Розетка над столом кухни", &storage);
-    println!("Отчет: {:#?}", report);
-    let report = smarthouse.get_device_info("Kitchen", "Розетка у плиты", &storage);
-    println!("Отчет: {:#?}", report);
-    print!("Отчет: {}", smarthouse.get_roooms_list());
-    print!("Отчет: {}", smarthouse.get_rooms_devices_list("Kitchen"));
-    print!("Отчет: {}", smarthouse.get_rooms_devices_list("Bedroom"));
+    // let report = smarthouse.get_device_info("Bedroom", "Розетка у ванны в спальне", &storage);
+    // println!("Отчет: {:#?}", report);
+    // let report = smarthouse.get_device_info("Bedroom", "Розетка в спальне", &storage);
+    // println!("Отчет: {:#?}", report);
+    // let report = smarthouse.get_device_info("Bedroom", "Термометр в спальне", &storage);
+    // println!("Отчет: {:#?}", report);
+    // let report = smarthouse.get_device_info("Kitchen", "Розетка над столом кухни", &storage);
+    // println!("Отчет: {:#?}", report);
+    // let report = smarthouse.get_device_info("Kitchen", "Розетка у плиты", &storage);
+    // println!("Отчет: {:#?}", report);
+    // print!("Отчет: {}", smarthouse.get_roooms_list());
+    // print!("Отчет: {}", smarthouse.get_rooms_devices_list("Kitchen"));
+    // print!("Отчет: {}", smarthouse.get_rooms_devices_list("Bedroom"));
+    println!("{}", smarthouse.full_report(&storage));
 }
