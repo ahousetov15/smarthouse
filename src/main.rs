@@ -57,7 +57,7 @@ struct Room {
 }
 
 impl Room {
-    fn new(params: Room) -> Self{
+    fn new(params: Room) -> Self {
         Self {
             name: params.name,
             devices: params.devices,
@@ -136,10 +136,22 @@ struct Smarthouse {
 }
 
 impl Smarthouse {
-    fn new(name: &str, device_storage: &DeviceStorage) {
-        let rooms_map = HashMap::<String, Room>;
+    fn new(name: &str, device_storage: &DeviceStorage) -> Self {
+        let mut rooms_map = HashMap::<String, Room>::new();
         for (room_name, devices) in device_storage.room_map.iter() {
-            let mut room = Room::new(Room{name: *room_name, decives: HashSet<String>});
+            let mut room = Room::new(Room {
+                name: room_name.to_string(),
+                devices: HashSet::<String>::new(),
+            });
+            for device in devices.iter() {
+                room.devices.insert(device.name().to_string());
+            }
+            println!("Сформировали новую комнату: {:#?}", room);
+            rooms_map.insert(room_name.to_string(), room);
+        }
+        Self {
+            name: name.to_string(),
+            rooms: rooms_map,
         }
     }
 }
@@ -416,6 +428,7 @@ fn main() {
     storage
         .room_map
         .insert("Kitchen".to_string(), kitche_device);
+    let smarthouse = Smarthouse::new("Домашная работа 3", &storage);
 
     // let mut room_1_sockets: Vec = vec![
     //     Socket {
