@@ -53,7 +53,16 @@ impl Thermometer {
 #[derive(Debug, Clone)]
 struct Room {
     name: String,
-    decives: HashSet<String>,
+    devices: HashSet<String>,
+}
+
+impl Room {
+    fn new(params: Room) -> Self{
+        Self {
+            name: params.name,
+            devices: params.devices,
+        }
+    }
 }
 
 trait DeviceInterface {
@@ -126,12 +135,27 @@ struct Smarthouse {
     rooms: HashMap<String, Room>,
 }
 
+impl Smarthouse {
+    fn new(name: &str, device_storage: &DeviceStorage) {
+        let rooms_map = HashMap::<String, Room>;
+        for (room_name, devices) in device_storage.room_map.iter() {
+            let mut room = Room::new(Room{name: *room_name, decives: HashSet<String>});
+        }
+    }
+}
+
 /// Хранилище устройств
 struct DeviceStorage {
     room_map: HashMap<String, Vec<Box<dyn DeviceInterface>>>,
 }
 
 impl DeviceStorage {
+    fn new(param: DeviceStorage) -> Self {
+        Self {
+            room_map: param.room_map,
+        }
+    }
+
     fn get_device_report(&self, room: &str, name: &str) -> Option<String> {
         match self.room_map.get(room) {
             Some(device_vec) => {
@@ -355,39 +379,43 @@ impl SmarthouseInterface for Smarthouse {
 
 fn main() {
     // Создаем набор устройств для спальни
-
-    // let mut socket1 = Socket {
-    //     name: "Розетка в спальне".to_string(),
-    //     power: 220.0,
-    //     state: SocketState::IsOff,
-    // };
-    // let mut socket2 = Socket {
-    //     name: "Розетка у ванны".to_string(),
-    //     power: 210.0,
-    //     state: SocketState::IsOn,
-    // };
-    // let mut thermometer1 = Thermometer {
-    //     name: "Термометр в комнате".to_string(),
-    //     temperature: 22,
-    // };
-    let mut bedroom_device: Vec<&dyn DeviceInterface> = vec![
-        &Socket::new(Socket {
+    let mut bedroom_device: Vec<Box<dyn DeviceInterface>> = vec![
+        Box::new(Socket::new(Socket {
             name: "Розетка в спальне".to_string(),
             power: 220.0,
             state: SocketState::IsOff,
-        }),
-        &Socket::new(Socket {
-            name: "Розетка у ванны".to_string(),
+        })),
+        Box::new(Socket::new(Socket {
+            name: "Розетка у ванны в спальне".to_string(),
             power: 210.0,
             state: SocketState::IsOn,
-        }),
-        &Thermometer::new(Thermometer {
-            name: "Термометр в комнате".to_string(),
+        })),
+        Box::new(Thermometer::new(Thermometer {
+            name: "Термометр в спальне".to_string(),
             temperature: 22,
-        }),
+        })),
     ];
-    // bedroom_device.push(Rc::new(socket1 as Rc<dyn DeviceInterface<Socket>>));
-    // bedroom_device.push(Rc::new(thermometer1));
+    let mut kitche_device: Vec<Box<dyn DeviceInterface>> = vec![
+        Box::new(Socket::new(Socket {
+            name: "Розетка над столом кухни".to_string(),
+            power: 220.0,
+            state: SocketState::IsOff,
+        })),
+        Box::new(Socket::new(Socket {
+            name: "Розетка у плиты".to_string(),
+            power: 210.0,
+            state: SocketState::IsOn,
+        })),
+    ];
+    let mut storage: DeviceStorage = DeviceStorage::new(DeviceStorage {
+        room_map: HashMap::new(),
+    });
+    storage
+        .room_map
+        .insert("Bedroom".to_string(), bedroom_device);
+    storage
+        .room_map
+        .insert("Kitchen".to_string(), kitche_device);
 
     // let mut room_1_sockets: Vec = vec![
     //     Socket {
