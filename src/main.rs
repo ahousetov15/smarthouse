@@ -41,14 +41,6 @@ impl Thermometer {
     }
 }
 
-// /// Для хранения разных типов устройств в одном контейнере,
-// /// создаем некий тип-перечисление типов.
-// #[derive(Clone)]
-// enum Device {
-//     Socket(Socket),
-//     Thermometer(Thermometer),
-// }
-
 /// Команата
 #[derive(Debug, Clone)]
 struct Room {
@@ -196,6 +188,9 @@ trait SmarthouseInterface {
         device_name: &str,
         storage: &DeviceStorage,
     ) -> Option<String>; // Получаем информацию о том, ГДЕ ИМЕННО В ДОМЕ находится девайс
+
+    fn get_roooms_list(&self) -> String; // Получаем список комнат прям строкой
+    fn get_rooms_devices_list(&self, room_name: &str) -> String; // Получаем список устройств прямо строкой
 }
 
 impl SmarthouseInterface for Smarthouse {
@@ -219,6 +214,39 @@ impl SmarthouseInterface for Smarthouse {
             _ => {
                 println!("Такой комнаты: '{:?}' в доме нет.", room_name);
                 None
+            }
+        }
+    }
+
+    fn get_roooms_list(&self) -> String {
+        let mut room_list = Vec::new();
+        for room_name in &self.rooms {
+            room_list.push(room_name.0.as_ref());
+        }
+        format!(
+            "В доме '{}' присутствуют следующие комнаты:\n -{}\n",
+            self.name,
+            room_list.join("\n -")
+        )
+    }
+
+    fn get_rooms_devices_list(&self, room_name: &str) -> String {
+        match self.rooms.get(room_name) {
+            Some(room_struct) => {
+                // let room_devices_list = room_struct.devices.iter().collect::<Vec<_>>();
+                let mut room_devices_list = Vec::<&str>::new();
+                for device_name in &room_struct.devices {
+                    room_devices_list.push(device_name);
+                }
+                format!(
+                    "В комнате '{}' дома '{}' присутствуют следующие устройства:\n -{}\n",
+                    room_name,
+                    self.name,
+                    room_devices_list.join("\n -")
+                )
+            }
+            _ => {
+                format!("Комнаты с именем '{}' не найдено.", room_name)
             }
         }
     }
@@ -274,4 +302,7 @@ fn main() {
     println!("Отчет: {:#?}", report);
     let report = smarthouse.get_device_info("Kitchen", "Розетка у плиты", &storage);
     println!("Отчет: {:#?}", report);
+    print!("Отчет: {}", smarthouse.get_roooms_list());
+    print!("Отчет: {}", smarthouse.get_rooms_devices_list("Kitchen"));
+    print!("Отчет: {}", smarthouse.get_rooms_devices_list("Bedroom"));
 }
