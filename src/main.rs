@@ -66,7 +66,6 @@ trait DeviceInterface {
 
 impl DeviceInterface for Socket {
     fn name(&self) -> &str {
-        //println!("{:?} розетка", self.name.as_str());
         self.name.as_str()
     }
 
@@ -91,7 +90,7 @@ impl DeviceInterface for Socket {
 
     /// Получить отчет о потреблемой мощности
     fn report(&self) -> String {
-        format!(" - Розетка: '{}' на {} ватт\n", self.name, self.power)
+        " - Розетка: '{self.name}' на {self.power} ватт\n".to_string()
     }
 }
 
@@ -102,7 +101,6 @@ impl DeviceInterface for Thermometer {
     }
 
     fn name(&self) -> &str {
-        //println!("{:?} термометр", self.name.as_str());
         self.name.as_str()
     }
 
@@ -244,7 +242,7 @@ impl SmarthouseInterface for Smarthouse {
     }
 
     fn full_report(&self, storage: &DeviceStorage) -> String {
-        let mut full_report = format!("\n*** Полный отчет о состоянии дома '{}' ***\n", self.name);
+        let mut full_report = "\n*** Полный отчет о состоянии дома '{self.name}' ***\n".to_string();
         full_report += &self.get_roooms_list();
         for room in &self.rooms {
             full_report += "\nУстройства в комнате '{room.0}':\n";
