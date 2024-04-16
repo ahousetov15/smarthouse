@@ -86,8 +86,7 @@ impl DeviceInterface for Socket {
 
     /// Получить потребляемую мощность
     fn get(&self) -> String {
-        let power_str = self.power.to_string();
-        power_str
+        self.power.to_string()
     }
 
     /// Получить отчет о потреблемой мощности
@@ -99,8 +98,7 @@ impl DeviceInterface for Socket {
 impl DeviceInterface for Thermometer {
     ///Получить текущую температуру
     fn get(&self) -> String {
-        let temp_str = self.temperature.to_string();
-        temp_str
+        self.temperature.to_string()
     }
 
     fn name(&self) -> &str {
@@ -257,15 +255,12 @@ impl SmarthouseInterface for Smarthouse {
             full_report += &self.get_rooms_devices_list(room.0.as_ref());
             full_report += &format!("\nДанные по устройсвам в '{}':\n", room.0);
             for device_name in &room.1.devices {
-                match self.get_device_info(&room.0, &device_name, storage) {
-                    Some(device_report) => {
-                        full_report += &device_report;
-                    }
-                    _ => {}
+                if let Some(device_report) = self.get_device_info(room.0, device_name, storage) {
+                    full_report += &device_report;
                 }
             }
         }
-        full_report += &format!("\n*** Отчет о доме окончен ***\n");
+        full_report += "\n*** Отчет о доме окончен ***\n";
         full_report
     }
 }
