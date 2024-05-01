@@ -5,13 +5,8 @@ mod storage;
 use smarthouse::devices::devices::{Socket, SocketState, Thermometer};
 use smarthouse::traits::device_interface::DeviceInterface;
 use smarthouse::smarthouse::smarthouse::Smarthouse;
-use crate::smarthouse::traits::device_interface::SmarthouseInterface;
+use smarthouse::traits::device_interface::SmarthouseInterface;
 use storage::device_storage::device_storage::DeviceStorage;
-
-
-
-
-
 
 
 fn main() {

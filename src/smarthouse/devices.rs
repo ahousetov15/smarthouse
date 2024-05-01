@@ -52,13 +52,5 @@ pub mod devices{
                 temperature: param.temperature,
             }
         }
-
-        pub fn get_name(&self) -> &str {
-            self.name.as_str()
-        }
-
-        pub fn get_temperature(&self) -> &i32 {
-            &self.temperature
-        }
     }
 }
