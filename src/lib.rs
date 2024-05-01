@@ -1,119 +1,121 @@
-// src/main.rs
-
+// src/lib.rs
 use std::collections::{HashMap, HashSet};
+mod smarthouse;
+use smarthouse::devices::devices::{Socket, SocketState, Thermometer};
+use smarthouse::rooms::rooms::Room;
+use smarthouse::traits::device_interface::DeviceInterface;
+// ///Состояния нашей розетки
+// #[derive(Clone)]
+// enum SocketState {
+//     IsOn,  //Включено
+//     IsOff, //Выключено
+// }
 
-///Состояния нашей розетки
-#[derive(Clone)]
-enum SocketState {
-    IsOn,  //Включено
-    IsOff, //Выключено
-}
+// #[derive(Clone)]
+// struct Socket {
+//     name: String,       //Имя девайса
+//     power: f32,         //Величина в ваттах
+//     state: SocketState, //Состояние розетки (Вкл./Выкл.)
+// }
 
-#[derive(Clone)]
-struct Socket {
-    name: String,       //Имя девайса
-    power: f32,         //Величина в ваттах
-    state: SocketState, //Состояние розетки (Вкл./Выкл.)
-}
+// impl Socket {
+//     fn new(params: Socket) -> Self {
+//         Self {
+//             name: params.name,
+//             power: params.power,
+//             state: params.state,
+//         }
+//     }
+// }
 
-impl Socket {
-    fn new(params: Socket) -> Self {
-        Self {
-            name: params.name,
-            power: params.power,
-            state: params.state,
-        }
-    }
-}
+// #[derive(Clone)]
+// struct Thermometer {
+//     name: String,     // Имя девайса
+//     temperature: i32, // Температура в градусах цельсия
+// }
 
-#[derive(Clone)]
-struct Thermometer {
-    name: String,     // Имя девайса
-    temperature: i32, // Температура в градусах цельсия
-}
+// impl Thermometer {
+//     fn new(param: Thermometer) -> Self {
+//         Self {
+//             name: param.name,
+//             temperature: param.temperature,
+//         }
+//     }
+// }
 
-impl Thermometer {
-    fn new(param: Thermometer) -> Self {
-        Self {
-            name: param.name,
-            temperature: param.temperature,
-        }
-    }
-}
+// /// Команата
+// #[derive(Debug, Clone)]
+// struct Room {
+//     name: String,
+//     devices: HashSet<String>,
+// }
 
-/// Команата
-#[derive(Debug, Clone)]
-struct Room {
-    name: String,
-    devices: HashSet<String>,
-}
+// impl Room {
+//     fn new(params: Room) -> Self {
+//         Self {
+//             name: params.name,
+//             devices: params.devices,
+//         }
+//     }
+// }
 
-impl Room {
-    fn new(params: Room) -> Self {
-        Self {
-            name: params.name,
-            devices: params.devices,
-        }
-    }
-}
+// trait DeviceInterface {
+//     fn name(&self) -> &str;
+//     fn get(&self) -> String; //Получить список оборудования/помещений в комнате/доме
+//     fn interact(&mut self);
+//     fn report(&self) -> String;
+// }
 
-trait DeviceInterface {
-    fn name(&self) -> &str;
-    fn get(&self) -> String; //Получить список оборудования/помещений в комнате/доме
-    fn interact(&mut self); //Повернуть выключатель
-    fn report(&self) -> String;
-}
+// impl DeviceInterface for Socket {
+//     fn name(&self) -> &str {
+//         self.name.as_str()
+//     }
 
-impl DeviceInterface for Socket {
-    fn name(&self) -> &str {
-        self.name.as_str()
-    }
+//     /// Повернуть выключатель (во Вкл. или Выкл.)
+//     fn interact(&mut self) {
+//         self.state = match self.state {
+//             SocketState::IsOn => {
+//                 println!("Розетка выключена.");
+//                 SocketState::IsOff
+//             }
+//             SocketState::IsOff => {
+//                 println!("Розетка включена.");
+//                 SocketState::IsOn
+//             }
+//         }
+//     }
 
-    /// Повернуть выключатель (во Вкл. или Выкл.)
-    fn interact(&mut self) {
-        self.state = match self.state {
-            SocketState::IsOn => {
-                println!("Розетка выключена.");
-                SocketState::IsOff
-            }
-            SocketState::IsOff => {
-                println!("Розетка включена.");
-                SocketState::IsOn
-            }
-        }
-    }
+//     /// Получить потребляемую мощность
+//     fn get(&self) -> String {
+//         self.power.to_string()
+//     }
 
-    /// Получить потребляемую мощность
-    fn get(&self) -> String {
-        self.power.to_string()
-    }
+//     /// Получить отчет о потреблемой мощности
+//     fn report(&self) -> String {
+//         " - Розетка: '{self.name}' на {self.power} ватт\n".to_string()
+//     }
+// }
 
-    /// Получить отчет о потреблемой мощности
-    fn report(&self) -> String {
-        " - Розетка: '{self.name}' на {self.power} ватт\n".to_string()
-    }
-}
+// impl DeviceInterface for Thermometer {
+//     ///Получить текущую температуру
+//     fn get(&self) -> String {
+//         self.temperature.to_string()
+//     }
 
-impl DeviceInterface for Thermometer {
-    ///Получить текущую температуру
-    fn get(&self) -> String {
-        self.temperature.to_string()
-    }
+//     fn name(&self) -> &str {
+//         self.name.as_str()
+//     }
 
-    fn name(&self) -> &str {
-        self.name.as_str()
-    }
+//     fn interact(&mut self) {
+//         println!("SmarthouseInterface<Thermometer>::interact был вызыван");
+//     }
 
-    fn interact(&mut self) {
-        println!("SmarthouseInterface<Thermometer>::interact был вызыван");
-    }
-
-    /// Получить отчет о термометре и температура
-    fn report(&self) -> String {
-        " - Термометр: '{self.name}' с показанием +{self.temperature} градусов по цельсию\n"
-            .to_string()
-    }
-}
+//     /// Получить отчет о термометре и температура
+//     fn report(&self) -> String {
+//         " - Термометр: '{self.name}' с показанием +{self.temperature} градусов по цельсию\n"
+//             .to_string()
+//     }
+// }
 
 /// Наш умный дом
 struct Smarthouse {
@@ -130,7 +132,7 @@ impl Smarthouse {
                 devices: HashSet::<String>::new(),
             });
             for device in devices.iter() {
-                room.devices.insert(device.name().to_string());
+                room.devices.insert(device.get_name().to_string());
             }
             println!("Сформировали новую комнату: {:#?}", room);
             rooms_map.insert(room_name.to_string(), room);
@@ -158,7 +160,7 @@ impl DeviceStorage {
         match self.room_map.get(room_name) {
             Some(device_vec) => {
                 println!("Пробую найти устройство: '{}'", device_name);
-                let need_device = device_vec.iter().find(|&x| *x.name() == *device_name);
+                let need_device = device_vec.iter().find(|&x| *x.get_name() == *device_name);
                 match need_device {
                     Some(device) => Some(device.report()),
                     _ => {
