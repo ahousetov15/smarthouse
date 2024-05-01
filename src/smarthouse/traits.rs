@@ -1,5 +1,5 @@
 pub mod device_interface {
-    use crate::smarthouse::devices::devices::{Socket, SocketState, Thermometer};
+    use crate::smarthouse::devices::devices::{Socket, Thermometer};
     
     pub trait DeviceInterface {
         fn get_name(&self) -> &str;

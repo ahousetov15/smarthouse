@@ -244,12 +244,12 @@ impl SmarthouseInterface for Smarthouse {
     }
 
     fn full_report(&self, storage: &DeviceStorage) -> String {
-        let mut full_report = "\n*** Полный отчет о состоянии дома '{self.name}' ***\n".to_string();
+        let mut full_report = format!("\n*** Полный отчет о состоянии дома '{}' ***\n", self.name);
         full_report += &self.get_roooms_list();
         for room in &self.rooms {
-            full_report += "\nУстройства в комнате '{room.0}':\n";
+            full_report += format!("\nУстройства в комнате '{}':\n", room.0).as_str();
             full_report += &self.get_rooms_devices_list(room.0.as_ref());
-            full_report += "\nДанные по устройсвам в '{room.0}':\n";
+            full_report += format!("\nДанные по устройсвам в '{}':\n", room.0).as_str();
             for device_name in &room.1.devices {
                 if let Some(device_report) = self.get_device_info(room.0, device_name, storage) {
                     full_report += &device_report;
