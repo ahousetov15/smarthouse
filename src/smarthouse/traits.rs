@@ -113,7 +113,7 @@ pub mod device_interface {
                         room_devices_list.join("\n - ")
                     )
                 }
-                _ => "Комнаты с именем '{room_name}' не найдено.".to_string(),
+                _ => format!("Комнаты с именем '{:?}' не найдено.", room_name),
             }
         }
 
