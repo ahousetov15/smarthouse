@@ -113,7 +113,7 @@ pub mod device_interface {
                         room_devices_list.join("\n - ")
                     )
                 }
-                _ => "Комнаты с именем '{room_name}' не найдено.".to_string(),
+                _ => format!("Комнаты с именем '{:?}' не найдено.", room_name),
             }
         }
 
@@ -134,5 +134,41 @@ pub mod device_interface {
             full_report
         }
     }
+}
 
+
+#[cfg(test)]
+mod tests {
+    use super::super::enums::SocketState;
+    use crate::smarthouse::devices::devices::{Socket, Thermometer};
+    use crate::DeviceInterface;
+
+
+    #[test]
+    fn test_device_interface_socket() {
+        let socket_name = "Розетка".to_string();
+        let mut socket = Socket::new(Socket {
+            name: socket_name.clone(),
+            power: 220.0,
+            state: SocketState::IsOff
+        });
+        
+        let device_interface: &mut dyn DeviceInterface = &mut socket;
+        assert_eq!(device_interface.get_name(), &socket_name);
+        device_interface.interact();
+        assert_eq!(device_interface.get(), socket.power.to_string());
+        assert_eq!(socket.state, SocketState::IsOn);
+    }
+
+    #[test]
+    fn test_device_interface_thermometer() {
+        let therm_name = "Термометр".to_string();
+        let mut therm = Thermometer::new(Thermometer {
+            name: therm_name.clone(),
+            temperature: 22
+        });
+        let device_interface: &mut dyn DeviceInterface = &mut therm;
+        assert_eq!(device_interface.get_name(), &therm_name);
+        assert_eq!(device_interface.get(), therm.temperature.to_string());
+    }
 }
