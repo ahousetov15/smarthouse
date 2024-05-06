@@ -1,15 +1,7 @@
-// src/lib.rs
-use std::collections::{HashMap, HashSet};
-mod smarthouse;
-mod storage;
-use smarthouse::devices::devices::{Socket, SocketState, Thermometer};
-use smarthouse::traits::device_interface::DeviceInterface;
-use smarthouse::smarthouse::smarthouse::Smarthouse;
-use smarthouse::traits::device_interface::SmarthouseInterface;
-use storage::device_storage::device_storage::DeviceStorage;
+use smarthouse::*;
 
-
-fn main() {
+#[test]
+fn main_smarthouse_test() {
     // Создаем набор устройств для спальни
     let bedroom_device: Vec<Box<dyn DeviceInterface>> = vec![
         Box::new(Socket::new(Socket {

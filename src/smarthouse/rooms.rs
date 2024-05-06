@@ -1,6 +1,6 @@
 
 pub mod rooms {
-    use crate::HashSet;
+    use std::collections::HashSet;
 
     /// Команата
     #[derive(Debug, Clone)]
