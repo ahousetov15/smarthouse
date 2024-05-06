@@ -2,31 +2,42 @@ use smarthouse::*;
 
 #[test]
 fn main_smarthouse_test() {
+    // Создаем имена для наших устройств в разных комнатах
+    let socket_bedroom_name = String::from("Розетка в спальне");
+    let socket_bedroom_bathroom_name = String::from("Розетка у ванны в спальне");
+    let thermo_bedroom_name = String::from("Термометр в спальне");
+    let socket_kitchen_name = String::from("Розетка над столом кухни");
+    let socket_kitchen_stove_name = String::from("Розетка у плиты");
+    
+    // Создаем имена наших комнат
+    let bedroom_name = String::from("Спальня");
+    let kitchen_name = String::from("Кухня");
+
     // Создаем набор устройств для спальни
     let bedroom_device: Vec<Box<dyn DeviceInterface>> = vec![
         Box::new(Socket::new(Socket {
-            name: "Розетка в спальне".to_string(),
+            name: socket_bedroom_name.clone(),
             power: 220.0,
             state: SocketState::IsOff,
         })),
         Box::new(Socket::new(Socket {
-            name: "Розетка у ванны в спальне".to_string(),
+            name: socket_bedroom_bathroom_name.clone(),
             power: 210.0,
             state: SocketState::IsOn,
         })),
         Box::new(Thermometer::new(Thermometer {
-            name: "Термометр в спальне".to_string(),
+            name: thermo_bedroom_name.clone(),
             temperature: 22,
         })),
     ];
     let kitche_device: Vec<Box<dyn DeviceInterface>> = vec![
         Box::new(Socket::new(Socket {
-            name: "Розетка над столом кухни".to_string(),
+            name: socket_kitchen_name.clone(),
             power: 220.0,
             state: SocketState::IsOff,
         })),
         Box::new(Socket::new(Socket {
-            name: "Розетка у плиты".to_string(),
+            name: socket_kitchen_stove_name.clone(),
             power: 210.0,
             state: SocketState::IsOn,
         })),
@@ -36,23 +47,37 @@ fn main_smarthouse_test() {
     });
     storage
         .room_map
-        .insert("Bedroom".to_string(), bedroom_device);
+        .insert(bedroom_name.clone(), bedroom_device);
     storage
         .room_map
-        .insert("Kitchen".to_string(), kitche_device);
+        .insert(kitchen_name.clone(), kitche_device);
+
+    // Создали умный дом
     let smarthouse = Smarthouse::new("Домашная работа 3", &storage);
-    // let report = smarthouse.get_device_info("Bedroom", "Розетка у ванны в спальне", &storage);
-    // println!("Отчет: {:#?}", report);
-    // let report = smarthouse.get_device_info("Bedroom", "Розетка в спальне", &storage);
-    // println!("Отчет: {:#?}", report);
-    // let report = smarthouse.get_device_info("Bedroom", "Термометр в спальне", &storage);
-    // println!("Отчет: {:#?}", report);
-    // let report = smarthouse.get_device_info("Kitchen", "Розетка над столом кухни", &storage);
-    // println!("Отчет: {:#?}", report);
-    // let report = smarthouse.get_device_info("Kitchen", "Розетка у плиты", &storage);
-    // println!("Отчет: {:#?}", report);
-    // print!("Отчет: {}", smarthouse.get_roooms_list());
-    // print!("Отчет: {}", smarthouse.get_rooms_devices_list("Kitchen"));
-    // print!("Отчет: {}", smarthouse.get_rooms_devices_list("Bedroom"));
-    println!("{}", smarthouse.full_report(&storage));
+
+    // Проверяем список комнат
+    assert!(smarthouse.get_roooms_list().contains(&bedroom_name));
+    assert!(smarthouse.get_roooms_list().contains(&kitchen_name));
+
+    // Проверяем список устройств в спальне
+    assert!(smarthouse.get_rooms_devices_list(&bedroom_name).contains(&socket_bedroom_name));
+    assert!(smarthouse.get_rooms_devices_list(&bedroom_name).contains(&socket_bedroom_bathroom_name));
+    assert!(smarthouse.get_rooms_devices_list(&bedroom_name).contains(&thermo_bedroom_name));
+
+    // Проверяем список устройств на кухне
+    assert!(smarthouse.get_rooms_devices_list(&kitchen_name).contains(&socket_kitchen_name));
+    assert!(smarthouse.get_rooms_devices_list(&kitchen_name).contains(&socket_kitchen_stove_name));
+
+    // Проверяем отчеты по устройствам
+    let exp_msg = format!("'{}' не найдено в {}", socket_bedroom_name, bedroom_name);
+    assert!(smarthouse.get_device_info(&bedroom_name, &socket_bedroom_name, &storage).expect(&exp_msg).contains(&socket_bedroom_name));
+    assert!(smarthouse.get_device_info(&bedroom_name, &socket_bedroom_name, &storage).expect(&exp_msg).contains("Розетка"));
+    assert!(smarthouse.get_device_info(&bedroom_name, &socket_bedroom_name, &storage).expect(&exp_msg).contains("ватт"));
+    assert!(smarthouse.get_device_info(&bedroom_name, &socket_bedroom_bathroom_name, &storage).expect(&exp_msg).contains(&socket_bedroom_bathroom_name));
+    assert!(smarthouse.get_device_info(&bedroom_name, &socket_bedroom_bathroom_name, &storage).expect(&exp_msg).contains("Розетка"));
+    assert!(smarthouse.get_device_info(&bedroom_name, &socket_bedroom_bathroom_name, &storage).expect(&exp_msg).contains("ватт"));
+    assert!(smarthouse.get_device_info(&bedroom_name, &thermo_bedroom_name, &storage).expect(&exp_msg).contains(&thermo_bedroom_name));
+    assert!(smarthouse.get_device_info(&bedroom_name, &thermo_bedroom_name, &storage).expect(&exp_msg).contains("Термометр"));
+    assert!(smarthouse.get_device_info(&bedroom_name, &thermo_bedroom_name, &storage).expect(&exp_msg).contains("градусов по цельсию"));
+    assert_eq!(smarthouse.get_device_info(&kitchen_name, format!("Неведомая хрень").as_str(), &storage), None);
 }
