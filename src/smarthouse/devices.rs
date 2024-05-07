@@ -72,7 +72,7 @@ mod tests {
 
     #[test]
     fn test_thermometer() {
-        let mut therm = Thermometer::new(Thermometer {
+        let mut therm: Thermometer = Thermometer::new(Thermometer {
             name: "Термометр".to_string(),
             temperature: 22
         });

@@ -153,10 +153,15 @@ mod tests {
             state: SocketState::IsOff
         });
         
-        let device_interface: &mut dyn DeviceInterface = &mut socket;
-        assert_eq!(device_interface.get_name(), &socket_name);
-        device_interface.interact();
-        assert_eq!(device_interface.get(), socket.power.to_string());
+        // let device_interface: &mut dyn DeviceInterface = &mut socket;
+        // assert_eq!(device_interface.get_name(), &socket_name);
+        // assert_eq!(device_interface.get(), socket.power.to_string().clone());
+        // device_interface.interact();
+        // assert_eq!(socket.state, SocketState::IsOn);
+        // socket.interact();
+        assert_eq!(socket.get_name(), &socket_name);
+        assert_eq!(socket.get(), socket.power.to_string());
+        socket.interact();
         assert_eq!(socket.state, SocketState::IsOn);
     }
 

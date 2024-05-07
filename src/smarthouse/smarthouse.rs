@@ -17,7 +17,7 @@ pub mod smarthouse {
             for (room_name, devices) in device_storage.room_map.iter() {
                 let mut room = Room::new(Room {
                     name: room_name.to_string(),
-                    devices: HashSet::<String>::new(),
+                    devices: HashSet::new(),
                 });
                 for device in devices.iter() {
                     room.devices.insert(device.get_name().to_string());
