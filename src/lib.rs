@@ -3,11 +3,11 @@ pub use std::collections::{HashMap, HashSet};
 mod smarthouse;
 mod storage;
 pub use smarthouse::enums::SocketState;
-pub use smarthouse::devices::devices::{Socket, Thermometer};
+pub use smarthouse::devices::{Socket, Thermometer};
 pub use smarthouse::traits::device_interface::DeviceInterface;
-pub use smarthouse::smarthouse::smarthouse::Smarthouse;
+pub use smarthouse::Smarthouse;
 pub use smarthouse::traits::device_interface::SmarthouseInterface;
-pub use storage::device_storage::device_storage::DeviceStorage;
+pub use storage::device_storage::DeviceStorage;
 
 
 // fn main() {

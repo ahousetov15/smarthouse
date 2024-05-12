@@ -1,8 +1,8 @@
 pub mod device_interface {
-    use crate::smarthouse::devices::devices::{Socket, Thermometer};
-    use crate::smarthouse::smarthouse::smarthouse::Smarthouse;
-    use crate::storage::device_storage::device_storage::DeviceStorage;
-    
+    use crate::smarthouse::devices::{Socket, Thermometer};
+    use crate::smarthouse::Smarthouse;
+    use crate::storage::device_storage::DeviceStorage;
+
     pub trait DeviceInterface {
         fn get_name(&self) -> &str;
         fn get(&self) -> String; //Получить список оборудования/помещений в комнате/доме
@@ -140,7 +140,7 @@ pub mod device_interface {
 #[cfg(test)]
 mod tests {
     use super::super::enums::SocketState;
-    use crate::smarthouse::devices::devices::{Socket, Thermometer};
+    use crate::smarthouse::devices::{Socket, Thermometer};
     use crate::DeviceInterface;
 
 

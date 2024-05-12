@@ -79,5 +79,5 @@ fn main_smarthouse_test() {
     assert!(smarthouse.get_device_info(&bedroom_name, &thermo_bedroom_name, &storage).expect(&exp_msg).contains(&thermo_bedroom_name));
     assert!(smarthouse.get_device_info(&bedroom_name, &thermo_bedroom_name, &storage).expect(&exp_msg).contains("Термометр"));
     assert!(smarthouse.get_device_info(&bedroom_name, &thermo_bedroom_name, &storage).expect(&exp_msg).contains("градусов по цельсию"));
-    assert_eq!(smarthouse.get_device_info(&kitchen_name, format!("Неведомая хрень").as_str(), &storage), None);
+    assert_eq!(smarthouse.get_device_info(&kitchen_name, "Неведомая хрень!".as_ref(), &storage), None);
 }
