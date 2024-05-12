@@ -1,7 +1,8 @@
 // src/lib.rs
 pub use std::collections::{HashMap, HashSet};
 pub extern crate pretty_env_logger;
-#[macro_use] extern crate log;
+// #[macro_use] extern crate log;
+extern crate log;
 mod smarthouse;
 mod storage;
 pub use smarthouse::enums::SocketState;

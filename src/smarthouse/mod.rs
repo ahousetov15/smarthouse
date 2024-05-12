@@ -5,7 +5,7 @@ use crate::smarthouse::rooms::Room;
 use crate::storage::device_storage::DeviceStorage;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use crate::log::{debug};
+use crate::log::{info};
 
 
 /// Наш умный дом
@@ -25,7 +25,7 @@ impl Smarthouse {
             for device in devices.iter() {
                 room.devices.insert(device.get_name().to_string());
             }
-            debug!("Сформировали новую комнату: {:#?}", room);
+            info!("Сформировали новую комнату: {:#?}", room);
             rooms_map.insert(room_name.to_string(), room);
         }
         Self {
