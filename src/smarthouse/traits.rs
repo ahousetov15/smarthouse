@@ -2,6 +2,8 @@ pub mod device_interface {
     use crate::smarthouse::devices::{Socket, Thermometer};
     use crate::smarthouse::Smarthouse;
     use crate::storage::device_storage::DeviceStorage;
+    use crate::log::{error, debug};
+
 
     pub trait DeviceInterface {
         fn get_name(&self) -> &str;
@@ -42,7 +44,7 @@ pub mod device_interface {
         }
 
         fn interact(&mut self) {
-            println!("SmarthouseInterface<Thermometer>::interact был вызыван");
+            debug!("SmarthouseInterface<Thermometer>::interact был вызыван");
         }
 
         /// Получить отчет о термометре и температура
@@ -76,12 +78,12 @@ pub mod device_interface {
                     if room_struct.devices.contains(device_name) {
                         storage.get_device_report(room_name, device_name)
                     } else {
-                        println!("Такого устройства: '{:?}' в доме нет.", device_name);
+                        error!("Такого устройства: '{:?}' в доме нет.", device_name);
                         None
                     }
                 }
                 _ => {
-                    println!("Такой комнаты: '{:?}' в доме нет.", room_name);
+                    error!("Такой комнаты: '{:?}' в доме нет.", room_name);
                     None
                 }
             }

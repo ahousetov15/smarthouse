@@ -5,6 +5,7 @@ use crate::smarthouse::rooms::Room;
 use crate::storage::device_storage::DeviceStorage;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use crate::log::{debug};
 
 
 /// Наш умный дом
@@ -24,7 +25,7 @@ impl Smarthouse {
             for device in devices.iter() {
                 room.devices.insert(device.get_name().to_string());
             }
-            println!("Сформировали новую комнату: {:#?}", room);
+            debug!("Сформировали новую комнату: {:#?}", room);
             rooms_map.insert(room_name.to_string(), room);
         }
         Self {
@@ -110,9 +111,16 @@ pub mod devices{
 mod tests {
     use crate::smarthouse::enums::SocketState;
     use crate::smarthouse::devices::{Socket, Thermometer};
+    extern crate pretty_env_logger;
+    // #[macro_use] extern crate log;
+
+    fn init() {
+        let _ = pretty_env_logger::init_timed();
+    }
 
     #[test]
     fn test_socket() {
+        init();
         let mut socket = Socket::new(Socket {
             name: "Розетка".to_string(),
             power: 220.0,
@@ -129,6 +137,7 @@ mod tests {
 
     #[test]
     fn test_thermometer() {
+        //init();
         let mut therm: Thermometer = Thermometer::new(Thermometer {
             name: "Термометр".to_string(),
             temperature: 22
