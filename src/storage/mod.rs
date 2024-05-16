@@ -1,9 +1,7 @@
-
-
 pub mod device_storage {
+    use crate::log::{debug, error};
     use crate::smarthouse::traits::device_interface::DeviceInterface;
     use std::collections::HashMap;
-    use crate::log::{error, debug};
 
     /// Хранилище устройств
     //pub struct DeviceStorage<'dev_strg_time> {
@@ -51,5 +49,5 @@ pub mod device_storage {
         //         }
         //     }
         // }
-    }   
+    }
 }
