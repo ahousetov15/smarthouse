@@ -1,5 +1,6 @@
 pub mod enums;
 pub mod traits;
+pub mod errors;
 
 use crate::smarthouse::rooms::Room;
 use crate::storage::device_storage::DeviceStorage;

@@ -1,6 +1,11 @@
+pub mod errors;
+pub mod enums;
 pub mod device_storage {
-    use crate::log::{debug, error};
+    // use crate::log::{debug, error};
+    use crate::log::{debug};
     use crate::smarthouse::traits::device_interface::DeviceInterface;
+    use crate::storage::enums::DeviceStorageErrors;
+    use crate::storage::errors::{NoDeviceError, NoRoomError};
     use std::collections::HashMap;
 
     /// Хранилище устройств
@@ -17,22 +22,26 @@ pub mod device_storage {
             }
         }
 
-        pub fn get_device_report(&self, room_name: &str, device_name: &str) -> Option<String> {
+        // pub fn get_device_report(&self, room_name: &str, device_name: &str) -> Option<String> {
+        pub fn get_device_report(&self, room_name: &str, device_name: &str) -> Result<String, DeviceStorageErrors> {
             match self.room_map.get(room_name) {
                 Some(device_vec) => {
                     debug!("Пробую найти устройство: {:?}", device_name);
                     let need_device = device_vec.iter().find(|&x| *x.get_name() == *device_name);
                     match need_device {
-                        Some(device) => Some(device.report()),
-                        _ => {
-                            error!("По имени {:?} устройств не найдено", device_name);
-                            None
-                        }
+                        Some(device) => Ok(device.report()),
+                        _ => Err(DeviceStorageErrors::NoDevice(NoDeviceError {
+                                room_name: room_name.to_string(),
+                                device_name: device_name.to_string(),
+                            }))
                     }
                 }
                 _ => {
-                    error!("Такой комнаты в доме нет.");
-                    None
+                    Err(DeviceStorageErrors::NoRoom(NoRoomError {
+                        room_name: room_name.to_string(),
+                    }))
+                    // error!("Такой комнаты в доме нет.");
+                    // None
                 }
             }
         }

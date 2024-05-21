@@ -1,8 +1,13 @@
 pub mod device_interface {
+    // use std::error;
+
     use crate::smarthouse::devices::{Socket, Thermometer};
     use crate::smarthouse::Smarthouse;
     use crate::storage::device_storage::DeviceStorage;
-    use crate::log::{error, debug};
+    use crate::storage::enums::DeviceStorageErrors;
+    // use crate::log::{error, debug};
+    use crate::log::{debug};
+    use crate::storage::errors::NoRoomError;
 
 
     pub trait DeviceInterface {
@@ -59,7 +64,8 @@ pub mod device_interface {
             room_name: &str,
             device_name: &str,
             storage: &DeviceStorage,
-        ) -> Option<String>; // Получаем информацию о том, ГДЕ ИМЕННО В ДОМЕ находится девайс
+        ) -> Result<String, DeviceStorageErrors>;// Получаем информацию о том, ГДЕ ИМЕННО В ДОМЕ находится девайс
+        // ) -> Option<String>; // Получаем информацию о том, ГДЕ ИМЕННО В ДОМЕ находится девайс
 
         fn get_roooms_list(&self) -> String; // Получаем список комнат прям строкой
         fn get_rooms_devices_list(&self, room_name: &str) -> String; // Получаем список устройств прямо строкой
@@ -72,19 +78,24 @@ pub mod device_interface {
             room_name: &str,
             device_name: &str,
             storage: &DeviceStorage,
-        ) -> Option<String> {
+        ) -> Result<String, DeviceStorageErrors> {
             match self.rooms.get(room_name) {
-                Some(room_struct) => {
-                    if room_struct.devices.contains(device_name) {
-                        storage.get_device_report(room_name, device_name)
-                    } else {
-                        error!("Такого устройства: '{:?}' в доме нет.", device_name);
-                        None
+                Some(_room_struct) => {
+                    match storage.get_device_report(room_name, device_name) {
+                        Ok(report) => Ok(report),
+                        Err(error ) => Err(error)
                     }
+                    // if room_struct.devices.contains(device_name) {
+                    //     storage.get_device_report(room_name, device_name)
+                    // } else {
+                    //     error!("Такого устройства: '{:?}' в доме нет.", device_name);
+                    //     None
+                    // }
                 }
                 _ => {
-                    error!("Такой комнаты: '{:?}' в доме нет.", room_name);
-                    None
+                    Err(DeviceStorageErrors::NoRoom(NoRoomError { room_name: room_name.to_string()}))
+                    // error!("Такой комнаты: '{:?}' в доме нет.", room_name);
+                    // None
                 }
             }
         }
@@ -127,9 +138,14 @@ pub mod device_interface {
                 full_report += &self.get_rooms_devices_list(room.0.as_ref());
                 full_report += format!("\nДанные по устройсвам в '{}':\n", room.0).as_str();
                 for device_name in &room.1.devices {
-                    if let Some(device_report) = self.get_device_info(room.0, device_name, storage) {
-                        full_report += &device_report;
+                    match self.get_device_info(room.0, device_name, storage) {
+                        Ok(report) => full_report += &report,
+                        Err(DeviceStorageErrors::NoDevice(error)) => full_report += error.to_string().as_str(),
+                        Err(DeviceStorageErrors::NoRoom(error)) => full_report += error.to_string().as_str(),
                     }
+                    // if let Some(device_report) = self.get_device_info(room.0, device_name, storage) {
+                    //     full_report += &device_report;
+                    // }
                 }
             }
             full_report += "\n*** Отчет о доме окончен ***\n";
