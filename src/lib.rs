@@ -11,5 +11,7 @@ pub use smarthouse::traits::device_interface::DeviceInterface;
 pub use smarthouse::Smarthouse;
 pub use smarthouse::traits::device_interface::SmarthouseInterface;
 pub use storage::device_storage::DeviceStorage;
-pub use storage::enums::DeviceStorageErrors;
+pub use storage::enums::DeviceStorageGetInfoErrors;
+pub use storage::enums::DeviceStorageAddOrDeleteErrors;
 pub use storage::errors::{NoDeviceError, NoRoomError};
+pub use std::sync::Arc;

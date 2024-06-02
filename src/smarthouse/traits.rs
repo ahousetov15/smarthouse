@@ -1,14 +1,11 @@
 pub mod device_interface {
-    // use std::error;
-
+    use crate::log::debug;
     use crate::smarthouse::devices::{Socket, Thermometer};
     use crate::smarthouse::Smarthouse;
     use crate::storage::device_storage::DeviceStorage;
-    use crate::storage::enums::DeviceStorageErrors;
-    // use crate::log::{error, debug};
-    use crate::log::{debug};
-    use crate::storage::errors::NoRoomError;
-
+    use crate::storage::enums::{DeviceStorageAddOrDeleteErrors, DeviceStorageGetInfoErrors};
+    use crate::storage::errors::{NoRoomError};
+    use crate::Arc;
 
     pub trait DeviceInterface {
         fn get_name(&self) -> &str;
@@ -54,7 +51,10 @@ pub mod device_interface {
 
         /// Получить отчет о термометре и температура
         fn report(&self) -> String {
-            format!(" - Термометр: '{}' с показанием +{} градусов по цельсию\n", self.name, self.temperature)
+            format!(
+                " - Термометр: '{}' с показанием +{} градусов по цельсию\n",
+                self.name, self.temperature
+            )
         }
     }
 
@@ -64,12 +64,21 @@ pub mod device_interface {
             room_name: &str,
             device_name: &str,
             storage: &DeviceStorage,
-        ) -> Result<String, DeviceStorageErrors>;// Получаем информацию о том, ГДЕ ИМЕННО В ДОМЕ находится девайс
-        // ) -> Option<String>; // Получаем информацию о том, ГДЕ ИМЕННО В ДОМЕ находится девайс
-
+        ) -> Result<String, DeviceStorageGetInfoErrors>; // -> Option<String; // Получаем информацию о том, ГДЕ ИМЕННО В ДОМЕ находится девайс
         fn get_roooms_list(&self) -> String; // Получаем список комнат прям строкой
         fn get_rooms_devices_list(&self, room_name: &str) -> String; // Получаем список устройств прямо строкой
         fn full_report(&self, storage: &DeviceStorage) -> String;
+        fn add_room(
+            &mut self,
+            room_name: &str,
+            storage: &mut DeviceStorage,
+        ) -> Result<String, DeviceStorageAddOrDeleteErrors>;
+        fn add_device_in_room(
+            &mut self,
+            room_name: &str,
+            device: Arc<dyn DeviceInterface>,
+            storage: &mut DeviceStorage,
+        ) -> Result<String, DeviceStorageAddOrDeleteErrors>; // -> Option<String>; // Дadd_device_in_room
     }
 
     impl SmarthouseInterface for Smarthouse {
@@ -78,25 +87,42 @@ pub mod device_interface {
             room_name: &str,
             device_name: &str,
             storage: &DeviceStorage,
-        ) -> Result<String, DeviceStorageErrors> {
+        ) -> Result<String, DeviceStorageGetInfoErrors> {
             match self.rooms.get(room_name) {
-                Some(_room_struct) => {
-                    match storage.get_device_report(room_name, device_name) {
-                        Ok(report) => Ok(report),
-                        Err(error ) => Err(error)
-                    }
-                    // if room_struct.devices.contains(device_name) {
-                    //     storage.get_device_report(room_name, device_name)
-                    // } else {
-                    //     error!("Такого устройства: '{:?}' в доме нет.", device_name);
-                    //     None
-                    // }
-                }
-                _ => {
-                    Err(DeviceStorageErrors::NoRoom(NoRoomError { room_name: room_name.to_string()}))
-                    // error!("Такой комнаты: '{:?}' в доме нет.", room_name);
-                    // None
-                }
+                Some(_room_struct) => match storage.get_device_report(room_name, device_name) {
+                    Ok(report) => Ok(report),
+                    Err(error) => Err(error),
+                },
+                _ => Err(DeviceStorageGetInfoErrors::NoRoom(NoRoomError {
+                    room_name: room_name.to_string(),
+                })),
+            }
+        }
+
+        fn add_room(
+            &mut self,
+            room_name: &str,
+            storage: &mut DeviceStorage,
+        ) -> Result<String, DeviceStorageAddOrDeleteErrors> {
+            match storage.add_to_storage(room_name, None) {
+                Ok(add_result) => Ok(add_result),
+                Err(DeviceStorageAddOrDeleteErrors::RoomWithoutDevice(msg)) => Ok(format!("{}", msg)),
+                Err(DeviceStorageAddOrDeleteErrors::RoomNotAdd(error)) => Err(DeviceStorageAddOrDeleteErrors::RoomNotAdd(error)),
+                Err(DeviceStorageAddOrDeleteErrors::DeviceNotAdd(error)) => Err(DeviceStorageAddOrDeleteErrors::DeviceNotAdd(error)),
+            }
+        }
+
+        fn add_device_in_room(
+            &mut self,
+            room_name: &str,
+            device: Arc<dyn DeviceInterface>,
+            storage: &mut DeviceStorage,
+        ) -> Result<String, DeviceStorageAddOrDeleteErrors> {
+            match storage.add_to_storage(room_name, Some(device)) {
+                Ok(add_result) => Ok(add_result),
+                Err(DeviceStorageAddOrDeleteErrors::RoomWithoutDevice(msg)) => Ok(format!("{}", msg)),
+                Err(DeviceStorageAddOrDeleteErrors::RoomNotAdd(error)) => Err(DeviceStorageAddOrDeleteErrors::RoomNotAdd(error)),
+                Err(DeviceStorageAddOrDeleteErrors::DeviceNotAdd(error)) => Err(DeviceStorageAddOrDeleteErrors::DeviceNotAdd(error)),
             }
         }
 
@@ -131,7 +157,8 @@ pub mod device_interface {
         }
 
         fn full_report(&self, storage: &DeviceStorage) -> String {
-            let mut full_report = format!("\n*** Полный отчет о состоянии дома '{}' ***\n", self.name);
+            let mut full_report =
+                format!("\n*** Полный отчет о состоянии дома '{}' ***\n", self.name);
             full_report += &self.get_roooms_list();
             for room in &self.rooms {
                 full_report += format!("\nУстройства в комнате '{}':\n", room.0).as_str();
@@ -140,12 +167,13 @@ pub mod device_interface {
                 for device_name in &room.1.devices {
                     match self.get_device_info(room.0, device_name, storage) {
                         Ok(report) => full_report += &report,
-                        Err(DeviceStorageErrors::NoDevice(error)) => full_report += error.to_string().as_str(),
-                        Err(DeviceStorageErrors::NoRoom(error)) => full_report += error.to_string().as_str(),
+                        Err(DeviceStorageGetInfoErrors::NoDevice(error)) => {
+                            full_report += error.to_string().as_str()
+                        }
+                        Err(DeviceStorageGetInfoErrors::NoRoom(error)) => {
+                            full_report += error.to_string().as_str()
+                        }
                     }
-                    // if let Some(device_report) = self.get_device_info(room.0, device_name, storage) {
-                    //     full_report += &device_report;
-                    // }
                 }
             }
             full_report += "\n*** Отчет о доме окончен ***\n";
@@ -154,13 +182,11 @@ pub mod device_interface {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::super::enums::SocketState;
     use crate::smarthouse::devices::{Socket, Thermometer};
     use crate::DeviceInterface;
-
 
     #[test]
     fn test_device_interface_socket() {
@@ -168,9 +194,9 @@ mod tests {
         let mut socket = Socket::new(Socket {
             name: socket_name.clone(),
             power: 220.0,
-            state: SocketState::IsOff
+            state: SocketState::IsOff,
         });
-        
+
         // let device_interface: &mut dyn DeviceInterface = &mut socket;
         // assert_eq!(device_interface.get_name(), &socket_name);
         // assert_eq!(device_interface.get(), socket.power.to_string().clone());
@@ -188,7 +214,7 @@ mod tests {
         let therm_name = "Термометр".to_string();
         let mut therm = Thermometer::new(Thermometer {
             name: therm_name.clone(),
-            temperature: 22
+            temperature: 22,
         });
         let device_interface: &mut dyn DeviceInterface = &mut therm;
         assert_eq!(device_interface.get_name(), &therm_name);

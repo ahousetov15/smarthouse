@@ -1,18 +1,46 @@
-use crate::storage::errors::{NoDeviceError, NoRoomError};
+use crate::storage::errors::{NoDeviceError, NoRoomError, RoomNotAddedError, DeviceNotAddedError, RoomAddWithoutDevices};
 
-pub enum DeviceStorageErrors {
+#[derive(Debug)]
+pub enum DeviceStorageGetInfoErrors {
     NoDevice(NoDeviceError),
-    NoRoom(NoRoomError),
+    NoRoom(NoRoomError)
 }
 
-impl From<NoDeviceError> for DeviceStorageErrors {
+#[derive(Debug)]
+pub enum DeviceStorageAddOrDeleteErrors {
+    RoomNotAdd(RoomNotAddedError),
+    DeviceNotAdd(DeviceNotAddedError),
+    RoomWithoutDevice(RoomAddWithoutDevices)
+}
+
+
+
+impl From<NoDeviceError> for DeviceStorageGetInfoErrors {
     fn from(err: NoDeviceError) -> Self {
-        DeviceStorageErrors::NoDevice(err)
+        DeviceStorageGetInfoErrors::NoDevice(err)
     }
 }
 
-impl From<NoRoomError> for DeviceStorageErrors {
+impl From<NoRoomError> for DeviceStorageGetInfoErrors {
     fn from(err: NoRoomError) -> Self {
-        DeviceStorageErrors::NoRoom(err)
+        DeviceStorageGetInfoErrors::NoRoom(err)
+    }
+}
+
+impl From<RoomNotAddedError> for DeviceStorageAddOrDeleteErrors {
+    fn from(err: RoomNotAddedError) -> Self {
+        DeviceStorageAddOrDeleteErrors::RoomNotAdd(err)
+    }
+}
+
+impl From<RoomAddWithoutDevices> for DeviceStorageAddOrDeleteErrors {
+    fn from(err: RoomAddWithoutDevices) -> Self {
+        DeviceStorageAddOrDeleteErrors::RoomWithoutDevice(err)
+    }
+}
+
+impl From<DeviceNotAddedError> for DeviceStorageAddOrDeleteErrors {
+    fn from(err: DeviceNotAddedError) -> Self {
+        DeviceStorageAddOrDeleteErrors::DeviceNotAdd(err)
     }
 }
